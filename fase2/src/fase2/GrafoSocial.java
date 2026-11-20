@@ -249,4 +249,58 @@ public class GrafoSocial {
         objetivo.siguiente = null;
         return true;
     }
+
+        public String listarAmigos(String id) {
+        return listarSalidas(id, TipoRelacion.AMISTAD);
+    }
+
+    public String listarSeguidos(String id) {
+        return listarSalidas(id, TipoRelacion.SEGUIR);
+    }
+
+    private String listarSalidas(String id, TipoRelacion tipo) {
+        Vertice usuario = buscar(id);
+
+        if (usuario == null) {
+            return null;
+        }
+
+        StringBuilder texto = new StringBuilder("[");
+
+        for (Arista actual = usuario.aristas;
+                actual != null; actual = actual.siguiente) {
+            if (actual.tipo == tipo) {
+                if (texto.length() > 1) {
+                    texto.append(", ");
+                }
+
+                texto.append(actual.destino.usuario);
+            }
+        }
+
+        return texto.append("]").toString();
+    }
+
+    public String listarSeguidores(String id) {
+        Vertice objetivo = buscar(id);
+
+        if (objetivo == null) {
+            return null;
+        }
+
+        StringBuilder texto = new StringBuilder("[");
+
+        for (Vertice usuario = cabeza;
+                usuario != null; usuario = usuario.siguiente) {
+            if (existe(usuario, objetivo, TipoRelacion.SEGUIR)) {
+                if (texto.length() > 1) {
+                    texto.append(", ");
+                }
+
+                texto.append(usuario.usuario);
+            }
+        }
+
+        return texto.append("]").toString();
+    }
 }
