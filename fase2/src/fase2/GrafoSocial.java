@@ -152,4 +152,101 @@ public class GrafoSocial {
 
         return texto.toString();
     }
+
+        public boolean seguir(String a, String b) {
+        Vertice origen = buscar(a);
+        Vertice destino = buscar(b);
+
+        if (origen == null || destino == null || origen == destino) {
+            return false;
+        }
+
+        if (existe(origen, destino, TipoRelacion.SEGUIR)) {
+            return false;
+        }
+
+        insertar(origen, destino, TipoRelacion.SEGUIR);
+        return true;
+    }
+
+    public boolean dejarDeSeguir(String a, String b) {
+        Vertice origen = buscar(a);
+        Vertice destino = buscar(b);
+
+        if (origen == null || destino == null) {
+            return false;
+        }
+
+        return quitar(origen, destino, TipoRelacion.SEGUIR);
+    }
+
+    public boolean eliminarAmistad(String a, String b) {
+        Vertice origen = buscar(a);
+        Vertice destino = buscar(b);
+
+        if (origen == null || destino == null
+                || !existe(origen, destino, TipoRelacion.AMISTAD)) {
+            return false;
+        }
+
+        quitar(origen, destino, TipoRelacion.AMISTAD);
+        quitar(destino, origen, TipoRelacion.AMISTAD);
+        return true;
+    }
+
+    private boolean quitar(Vertice origen, Vertice destino,
+                           TipoRelacion tipo) {
+        Arista anterior = null;
+        Arista actual = origen.aristas;
+
+        while (actual != null) {
+            if (actual.destino == destino && actual.tipo == tipo) {
+                if (anterior == null) {
+                    origen.aristas = actual.siguiente;
+                } else {
+                    anterior.siguiente = actual.siguiente;
+                }
+
+                return true;
+            }
+
+            anterior = actual;
+            actual = actual.siguiente;
+        }
+
+        return false;
+    }
+
+    public boolean eliminarPersona(String id) {
+        Vertice objetivo = buscar(id);
+
+        if (objetivo == null) {
+            return false;
+        }
+
+        // Retira las referencias entrantes de ambos tipos.
+        for (Vertice usuario = cabeza;
+                usuario != null; usuario = usuario.siguiente) {
+            quitar(usuario, objetivo, TipoRelacion.AMISTAD);
+            quitar(usuario, objetivo, TipoRelacion.SEGUIR);
+        }
+
+        Vertice anterior = null;
+        Vertice actual = cabeza;
+
+        while (actual != objetivo) {
+            anterior = actual;
+            actual = actual.siguiente;
+        }
+
+        if (anterior == null) {
+            cabeza = objetivo.siguiente;
+        } else {
+            anterior.siguiente = objetivo.siguiente;
+        }
+
+        objetivo.aristas = null;
+        objetivo.siguiente = null;
+        return true;
+    }
 }

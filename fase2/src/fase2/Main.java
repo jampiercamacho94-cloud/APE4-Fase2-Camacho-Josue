@@ -39,5 +39,38 @@ public class Main {
                 + red.agregarAmistad("U3", "U3"));
         System.out.println("Amistad con inexistente: "
                 + red.agregarAmistad("U1", "U9"));
+                System.out.println("\nSeguimientos");
+        System.out.println("Nicolás sigue a Irene: "
+                + red.seguir("U2", "U1"));
+        System.out.println("Emilia sigue a Irene: "
+                + red.seguir("U6", "U1"));
+        System.out.println("Seguimiento duplicado: "
+                + red.seguir("U2", "U1"));
+        System.out.println("Seguirse a sí mismo: "
+                + red.seguir("U3", "U3"));
+
+        System.out.println("\nRed con amistades y seguimientos");
+        System.out.print(red.mostrarRed());
+
+        System.out.println("\nEliminaciones");
+        System.out.println("Nicolás deja de seguir a Irene: "
+                + red.dejarDeSeguir("U2", "U1"));
+        System.out.println("Amigos de Irene después: "
+                + red.contarAmigos("U1"));
+
+        System.out.println("Eliminar amistad Irene-Valentina: "
+                + red.eliminarAmistad("U1", "U5"));
+        System.out.println("Amigos de Valentina después: "
+                + red.contarAmigos("U5"));
+
+        System.out.println("Eliminar a Irene: "
+                + red.eliminarPersona("U1"));
+        System.out.println("Eliminar a Irene otra vez: "
+                + red.eliminarPersona("U1"));
+
+        System.out.println("\nRed resultante");
+        System.out.print(red.mostrarRed());
+        System.out.println("Usuarios restantes: " + red.cantidadUsuarios());
+        System.out.println("Amistades restantes: " + red.cantidadAmistades());
     }
 }
