@@ -1,3 +1,5 @@
+package fase2;
+
 public class Usuario {
 
     private final String id;

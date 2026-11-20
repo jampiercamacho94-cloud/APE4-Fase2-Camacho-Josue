@@ -1,3 +1,5 @@
+package fase2;
+
 public class Amistad {
 
     private final Usuario usuarioA;

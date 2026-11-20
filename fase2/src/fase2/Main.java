@@ -6,6 +6,8 @@
  * Carga el ejemplo, ejecuta las pruebas e imprime los resultados.
  * Toda la impresión está aquí; GrafoSocial solo guarda datos y valida reglas.
  */
+package fase2;
+
 import java.util.Scanner;
 
 public class Main {
