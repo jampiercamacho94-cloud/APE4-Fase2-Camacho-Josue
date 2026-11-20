@@ -1,120 +1,155 @@
 package fase2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Locale;
 
 public class GrafoSocial {
+    private Vertice cabeza;
 
-    private final Map<String, Usuario> usuarios = new LinkedHashMap<>();
-
-    private final Map<String, Set<String>> adyacencia = new LinkedHashMap<>();
-
-    private final List<Amistad> amistades = new ArrayList<>();
-
-    // ---------------------------------------------------------------
-    // Construcción del grafo
-    // ---------------------------------------------------------------
-
-    public void agregarUsuario(String id, String nombre) {
-        Usuario nuevo = new Usuario(id, nombre); // valida ID y nombre vacíos
-        if (usuarios.containsKey(id)) {
-            throw new IllegalArgumentException("El usuario " + id + " ya existe en la red.");
-        }
-        usuarios.put(id, nuevo);
-        adyacencia.put(id, new LinkedHashSet<>());
-    }
-
-    public void agregarAmistad(String a, String b) {
-        validarUsuario(a);
-        validarUsuario(b);
-
-        if (a.equals(b)) {
-            throw new IllegalArgumentException(
-                "No se permiten lazos: " + a + " no puede ser amigo de sí mismo.");
+    public boolean registrarPersona(String id, String nombre) {
+        if (id == null || id.isBlank()
+                || nombre == null || nombre.isBlank()) {
+            return false;
         }
 
-        if (adyacencia.get(a).contains(b)) {
-            throw new IllegalArgumentException(
-                "La amistad " + a + "-" + b + " ya está registrada (el orden no importa: "
-                + b + "-" + a + " es la misma amistad).");
+        for (int i = 0; i < id.length(); i++) {
+            if (Character.isWhitespace(id.charAt(i)) || id.charAt(i) == ',') {
+                return false;
+            }
         }
 
-        adyacencia.get(a).add(b);
-        adyacencia.get(b).add(a);
-        amistades.add(new Amistad(usuarios.get(a), usuarios.get(b)));
+        if (buscar(id) != null) {
+            return false;
+        }
+
+        Usuario usuario = new Usuario(
+                id.toLowerCase(Locale.ROOT), nombre.trim());
+
+        Vertice nuevo = new Vertice(usuario);
+        nuevo.siguiente = cabeza;
+        cabeza = nuevo;
+        return true;
     }
 
-    // ---------------------------------------------------------------
-    // Consultas
-    // ---------------------------------------------------------------
+    private Vertice buscar(String id) {
+        if (id == null) {
+            return null;
+        }
 
-    public boolean existeRelacion(String origen, String destino) {
-        validarUsuario(origen);
-        validarUsuario(destino);
-        return adyacencia.get(origen).contains(destino);
+        String clave = id.trim().toLowerCase(Locale.ROOT);
+
+        for (Vertice actual = cabeza;
+                actual != null; actual = actual.siguiente) {
+            if (actual.usuario.getId().equals(clave)) {
+                return actual;
+            }
+        }
+
+        return null;
     }
 
-    public Set<String> vecinos(String id) {
-        validarUsuario(id);
-        return Collections.unmodifiableSet(adyacencia.get(id)); // solo lectura
+    public boolean agregarAmistad(String a, String b) {
+        Vertice origen = buscar(a);
+        Vertice destino = buscar(b);
+
+        if (origen == null || destino == null || origen == destino) {
+            return false;
+        }
+
+        if (existe(origen, destino, TipoRelacion.AMISTAD)) {
+            return false;
+        }
+
+        insertar(origen, destino, TipoRelacion.AMISTAD);
+        insertar(destino, origen, TipoRelacion.AMISTAD);
+        return true;
     }
 
-    public int grado(String id) {
-        validarUsuario(id);
-        return adyacencia.get(id).size();
+    private boolean existe(Vertice origen, Vertice destino,
+                           TipoRelacion tipo) {
+        for (Arista actual = origen.aristas;
+                actual != null; actual = actual.siguiente) {
+            if (actual.destino == destino && actual.tipo == tipo) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void insertar(Vertice origen, Vertice destino,
+                          TipoRelacion tipo) {
+        Arista nueva = new Arista(destino, tipo);
+        nueva.siguiente = origen.aristas;
+        origen.aristas = nueva;
     }
 
     public int cantidadUsuarios() {
-        return usuarios.size();
+        int cantidad = 0;
+
+        for (Vertice actual = cabeza;
+                actual != null; actual = actual.siguiente) {
+            cantidad++;
+        }
+
+        return cantidad;
     }
 
     public int cantidadAmistades() {
-        return amistades.size();
-    }
+        int aristas = 0;
 
-    public int sumaGrados() {
-        int suma = 0;
-        for (String id : usuarios.keySet()) {
-            suma += grado(id);
+        for (Vertice usuario = cabeza;
+                usuario != null; usuario = usuario.siguiente) {
+            for (Arista relacion = usuario.aristas;
+                    relacion != null; relacion = relacion.siguiente) {
+                if (relacion.tipo == TipoRelacion.AMISTAD) {
+                    aristas++;
+                }
+            }
         }
-        return suma;
+
+        return aristas / 2;
     }
 
-    public Usuario obtenerUsuario(String id) {
-        validarUsuario(id);
-        return usuarios.get(id);
-    }
+    public int contarAmigos(String id) {
+        Vertice usuario = buscar(id);
 
-    public Collection<Usuario> getUsuarios() {
-        return Collections.unmodifiableCollection(usuarios.values());
-    }
-
-    public List<Amistad> getAmistades() {
-        return Collections.unmodifiableList(amistades);
-    }
-
-    public String instantanea() {
-        StringBuilder sb = new StringBuilder();
-        for (String id : usuarios.keySet()) {
-            sb.append(id).append("=").append(adyacencia.get(id)).append(";");
+        if (usuario == null) {
+            return -1;
         }
-        sb.append("E=").append(amistades.size());
-        return sb.toString();
+
+        int cantidad = 0;
+
+        for (Arista actual = usuario.aristas;
+                actual != null; actual = actual.siguiente) {
+            if (actual.tipo == TipoRelacion.AMISTAD) {
+                cantidad++;
+            }
+        }
+
+        return cantidad;
     }
 
-    // ---------------------------------------------------------------
-    // Apoyo interno
-    // ---------------------------------------------------------------
+    public String mostrarRed() {
+        StringBuilder texto = new StringBuilder();
 
-    private void validarUsuario(String id) {
-        if (id == null || !usuarios.containsKey(id)) {
-            throw new IllegalArgumentException("El usuario " + id + " no existe en la red.");
+        for (Vertice usuario = cabeza;
+                usuario != null; usuario = usuario.siguiente) {
+            texto.append(usuario.usuario).append(" -> [");
+
+            for (Arista relacion = usuario.aristas;
+                    relacion != null; relacion = relacion.siguiente) {
+                texto.append(relacion.tipo)
+                        .append(" ")
+                        .append(relacion.destino.usuario.getId());
+
+                if (relacion.siguiente != null) {
+                    texto.append(", ");
+                }
+            }
+
+            texto.append("]\n");
         }
+
+        return texto.toString();
     }
 }
